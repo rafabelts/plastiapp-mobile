@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native';
 import { colors } from '@/constants';
+import { StyleSheet } from 'react-native';
 
 
 export const deliverySummaryStyles = StyleSheet.create({
@@ -26,7 +26,7 @@ export const deliverySummaryStyles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 100,
   },
-  
+
 
   title: {
     fontSize: 31,
@@ -42,7 +42,7 @@ export const deliverySummaryStyles = StyleSheet.create({
     color: colors.primary.dark,
     marginBottom: 24,
   },
-  
+
 
   deliveredSection: {
     flexDirection: 'row',
@@ -59,14 +59,13 @@ export const deliverySummaryStyles = StyleSheet.create({
     fontWeight: '700',
     color: colors.primary.normal,
   },
-  
+
 
   table: {
     marginBottom: 32,
   },
   tableHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
@@ -77,11 +76,9 @@ export const deliverySummaryStyles = StyleSheet.create({
     fontWeight: '700',
     color: colors.texts.dark,
     flex: 1,
-    textAlign: 'left',
   },
   tableRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
@@ -91,9 +88,8 @@ export const deliverySummaryStyles = StyleSheet.create({
     fontWeight: '400',
     color: colors.texts.dark,
     flex: 1,
-    textAlign: 'left',
   },
-  
+
 
   totalSection: {
     flexDirection: 'row',
@@ -110,8 +106,8 @@ export const deliverySummaryStyles = StyleSheet.create({
     fontWeight: '700',
     color: colors.primary.normal,
   },
-  
- 
+
+
   buttonContainer: {
     position: 'absolute',
     bottom: 0,

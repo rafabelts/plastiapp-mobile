@@ -1,15 +1,69 @@
 import { Button, DeliveryModal } from '@/components';
 import { colors } from '@/constants';
+import { plasticService } from '@/services';
 import { deliverySummaryStyles } from '@/styles/delivery.summary.styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+
+interface SelectedPlastic {
+  id: number;
+  name: string;
+  quantity: number;
+  value: number;
+  pricePerKg: number;
+}
 
 export default function DeliverySummaryScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [mergedPlastics, setMergedPlastics] = useState<SelectedPlastic[]>([]);
+  const [totalGenerated, setTotalGenerated] = useState<string>('0');
+
+  const folio = params.folio as string;
+  const passedPlastics: SelectedPlastic[] = params.plasticsData ? JSON.parse(params.plasticsData as string) : [];
+
+  useEffect(() => {
+    loadFreshData();
+  }, []);
+
+  const loadFreshData = async () => {
+    try {
+      const apiPlastics = await plasticService.getAllPlastics();
+
+      const merged = apiPlastics.map(apiPlastic => {
+        const passed = passedPlastics.find(p => p.id === apiPlastic.id);
+        const quantity = passed ? passed.quantity : 0;
+
+        return {
+          id: apiPlastic.id,
+          name: apiPlastic.name,
+          quantity: quantity,
+          value: quantity * apiPlastic.price,
+          pricePerKg: apiPlastic.price
+        };
+      });
+
+      setMergedPlastics(merged);
+
+      const newTotal = merged.reduce((acc, curr) => acc + curr.value, 0);
+      setTotalGenerated(newTotal.toString());
+
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      Alert.alert('Error', 'No se pudieron actualizar los datos de la entrega');
+
+      setMergedPlastics(passedPlastics);
+      setTotalGenerated(params.totalGenerated as string);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalKg = mergedPlastics.reduce((acc, curr) => acc + curr.quantity, 0);
 
   const handleFinish = () => {
     setModalVisible(true);
@@ -20,73 +74,60 @@ export default function DeliverySummaryScreen() {
     router.replace('/(app)/homeDeliver');
   };
 
+  if (loading) {
+    return (
+      <View style={[deliverySummaryStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary.normal} />
+      </View>
+    );
+  }
+
   return (
     <View style={deliverySummaryStyles.container}>
-
       <View style={deliverySummaryStyles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.push('/(app)/registerDeliver')}
           style={deliverySummaryStyles.backButton}
         >
           <Ionicons name="chevron-back" size={28} color={colors.texts.dark} />
         </TouchableOpacity>
       </View>
 
-
       <ScrollView
         style={deliverySummaryStyles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={deliverySummaryStyles.scrollContent}
       >
-
         <Text style={deliverySummaryStyles.title}>Resumen de entrega</Text>
 
-
-        <Text style={deliverySummaryStyles.folio}>Folio 1</Text>
-
+        <Text style={deliverySummaryStyles.folio}>{folio}</Text>
 
         <View style={deliverySummaryStyles.deliveredSection}>
           <Text style={deliverySummaryStyles.deliveredLabel}>Entregó </Text>
-          <Text style={deliverySummaryStyles.deliveredValue}>2 KG</Text>
+          <Text style={deliverySummaryStyles.deliveredValue}>{totalKg} KG</Text>
         </View>
-
 
         <View style={deliverySummaryStyles.table}>
-
           <View style={deliverySummaryStyles.tableHeader}>
-            <Text style={deliverySummaryStyles.tableHeaderText}>Plástico</Text>
-            <Text style={deliverySummaryStyles.tableHeaderText}>Kg</Text>
-            <Text style={deliverySummaryStyles.tableHeaderText}>Valor</Text>
+            <Text style={[deliverySummaryStyles.tableHeaderText, { textAlign: 'left' }]}>Plástico</Text>
+            <Text style={[deliverySummaryStyles.tableHeaderText, { textAlign: 'center' }]}>Kg</Text>
+            <Text style={[deliverySummaryStyles.tableHeaderText, { textAlign: 'right' }]}>Valor</Text>
           </View>
 
-
-          <View style={deliverySummaryStyles.tableRow}>
-            <Text style={deliverySummaryStyles.tableCell}>PET</Text>
-            <Text style={deliverySummaryStyles.tableCell}>2</Text>
-            <Text style={deliverySummaryStyles.tableCell}>$ 16</Text>
-          </View>
-
-
-          <View style={deliverySummaryStyles.tableRow}>
-            <Text style={deliverySummaryStyles.tableCell}>PEBD</Text>
-            <Text style={deliverySummaryStyles.tableCell}>0</Text>
-            <Text style={deliverySummaryStyles.tableCell}>$ 0</Text>
-          </View>
-
-          <View style={deliverySummaryStyles.tableRow}>
-            <Text style={deliverySummaryStyles.tableCell}>PP</Text>
-            <Text style={deliverySummaryStyles.tableCell}>0</Text>
-            <Text style={deliverySummaryStyles.tableCell}>$ 0</Text>
-          </View>
+          {mergedPlastics.map((plastic) => (
+            <View key={plastic.id} style={deliverySummaryStyles.tableRow}>
+              <Text style={[deliverySummaryStyles.tableCell, { textAlign: 'left' }]}>{plastic.name}</Text>
+              <Text style={[deliverySummaryStyles.tableCell, { textAlign: 'center' }]}>{plastic.quantity}</Text>
+              <Text style={[deliverySummaryStyles.tableCell, { textAlign: 'right' }]}>$ {plastic.value}</Text>
+            </View>
+          ))}
         </View>
-
 
         <View style={deliverySummaryStyles.totalSection}>
           <Text style={deliverySummaryStyles.totalLabel}>Total generado: </Text>
-          <Text style={deliverySummaryStyles.totalValue}>$16</Text>
+          <Text style={deliverySummaryStyles.totalValue}>${totalGenerated}</Text>
         </View>
       </ScrollView>
-
 
       <View style={deliverySummaryStyles.buttonContainer}>
         <Button label="Finalizar" onPress={handleFinish} />
