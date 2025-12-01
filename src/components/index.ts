@@ -1,5 +1,7 @@
+export { BottleLoadingAnimation } from './bottleLoadingAnimation';
 export { Button } from './button';
+export { DeliveryModal } from './deliveryModal';
 export { Input } from './input';
 export { Loading } from './loading';
-export { BottleLoadingAnimation } from './bottleLoadingAnimation';
-export { DeliveryModal } from './deliveryModal';
+export { LogoutModal } from './logOutModal';
+export { PlastiappLogo } from './PlastiappLogo';
